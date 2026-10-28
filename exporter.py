@@ -20,7 +20,8 @@ _TOP_WRAP = Alignment(vertical="top", wrap_text=True)
 
 _WIDTHS = {
     cfg.COL_NUMBER: 12, cfg.COL_ID: 30, cfg.COL_SOURCE: 60, cfg.COL_TARGET: 60,
-    cfg.COL_BOTH_EN: 22, cfg.COL_SRC_LANG: 18, cfg.COL_TGT_LANG: 18, cfg.COL_CONF: 14,
+    cfg.COL_BOTH_EN: 22, cfg.COL_EN_MATCH: 20, cfg.COL_SRC_LANG: 18, cfg.COL_TGT_LANG: 18,
+    cfg.COL_CONF: 14,
 }
 _BAD_SHEET_CHARS = re.compile(r"[\\/*?:\[\]]")
 
@@ -60,6 +61,8 @@ def _write_sheet(ws, df: pd.DataFrame) -> None:
                 # Force plain text so segments starting with "=" are never run as formulas.
                 cell.value = ILLEGAL_CHARACTERS_RE.sub("", str(value))
                 cell.data_type = "s"
+                if name == cfg.COL_EN_MATCH and value == "English not matching":
+                    cell.fill, cell.font = _RED_FILL, _RED_FONT
 
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = ws.dimensions
