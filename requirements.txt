@@ -1,0 +1,5 @@
+streamlit>=1.50,<2
+lingua-language-detector>=2.0,<3
+openpyxl>=3.1,<4
+defusedxml>=0.7,<1
+pandas>=2.2
