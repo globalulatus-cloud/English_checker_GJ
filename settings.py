@@ -13,11 +13,12 @@ COL_ID = "Segment ID"
 COL_SOURCE = "Source"
 COL_TARGET = "Target"
 COL_BOTH_EN = "Is both source and target English (Yes or No)"
+COL_EN_MATCH = "English text match"
 COL_SRC_LANG = "Source language"
 COL_TGT_LANG = "Target language"
 COL_CONF = "Confidence level"
 
 RESULT_COLUMNS = [
     COL_NUMBER, COL_ID, COL_SOURCE, COL_TARGET,
-    COL_BOTH_EN, COL_SRC_LANG, COL_TGT_LANG, COL_CONF,
+    COL_BOTH_EN, COL_EN_MATCH, COL_SRC_LANG, COL_TGT_LANG, COL_CONF,
 ]
