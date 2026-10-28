@@ -28,7 +28,19 @@ def style_results(df: pd.DataFrame):
             if pd.notna(v) and v < cfg.CONFIDENCE_THRESHOLD else ""
             for v in column
         ]
-    return df.style.apply(red, subset=[cfg.COL_CONF]).format({cfg.COL_CONF: "{:.1%}"}, na_rep="")
+
+    def red_mismatch(column: pd.Series) -> list[str]:
+        return [
+            "background-color:#D32F2F;color:white;font-weight:600"
+            if v == "English not matching" else ""
+            for v in column
+        ]
+
+    return (
+        df.style.apply(red, subset=[cfg.COL_CONF])
+        .apply(red_mismatch, subset=[cfg.COL_EN_MATCH])
+        .format({cfg.COL_CONF: "{:.1%}"}, na_rep="")
+    )
 
 
 def show_per_file(frames: list[tuple[str, pd.DataFrame]], render) -> None:
@@ -111,6 +123,7 @@ def main() -> None:
         ui.stat_cards([
             ("Segments analysed", len(all_rows), "#00E5FF"),
             ("Source and target both English", int((all_rows[cfg.COL_BOTH_EN] == "Yes").sum()), "#FFB703"),
+            ("English text not matching", int((all_rows[cfg.COL_EN_MATCH] == "English not matching").sum()), "#FF4D5A"),
             (f"Confidence below {cfg.CONFIDENCE_THRESHOLD:.0%}",
              int((confidence < cfg.CONFIDENCE_THRESHOLD).sum()), "#FF4D5A"),
         ])
