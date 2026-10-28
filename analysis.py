@@ -9,6 +9,8 @@ from mxliff_parser import Segment
 
 
 BOTH_SAME = "Both same"
+EN_NOT_MATCHING = "English not matching"
+EN_MATCH_NA = ""  # not applicable: source and target aren't both English
 
 
 def analyse(
@@ -32,6 +34,10 @@ def analyse(
         if (src_lang == tgt_lang and src_lang in (SYMBOLS, CODE)
                 and seg.source.strip() == seg.target.strip()):
             src_lang = tgt_lang = BOTH_SAME
+        if both_english:
+            en_match = BOTH_SAME if seg.source.strip() == seg.target.strip() else EN_NOT_MATCHING
+        else:
+            en_match = EN_MATCH_NA
         if src.confidence is None or tgt.confidence is None:
             confidence = float("nan")
         else:
@@ -43,6 +49,7 @@ def analyse(
             cfg.COL_SOURCE: seg.source,
             cfg.COL_TARGET: seg.target,
             cfg.COL_BOTH_EN: "Yes" if both_english else "No",
+            cfg.COL_EN_MATCH: en_match,
             cfg.COL_SRC_LANG: src_lang,
             cfg.COL_TGT_LANG: tgt_lang,
             cfg.COL_CONF: confidence,
