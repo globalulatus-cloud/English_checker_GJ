@@ -28,16 +28,33 @@ _CSS = """
   border: 1px solid rgba(0,229,255,.6); background: rgba(0,229,255,.08); border-radius: 4px; }
 .tag.alert { color: #FFB703; border-color: rgba(255,183,3,.7); background: rgba(255,183,3,.08); }
 
-.reactor { position: relative; width: 140px; height: 140px; flex: none; margin-right: 1rem; }
+.reactor-box { display: flex; flex-direction: column; align-items: center; gap: .7rem; margin-right: 1rem; flex: none; }
+.reactor-box.idle { --pulse: 3.6s; --spin: 18s; }
+.reactor-box.busy { --pulse: .8s; --spin: 1.6s; }
+.reactor-box.done { --pulse: 2.4s; --spin: 60s; }
+.reactor { position: relative; width: 140px; height: 140px; }
 .reactor i { position: absolute; border-radius: 50%; }
-.reactor i:nth-child(1) { inset: 0; border: 3px solid #00E5FF;
-  box-shadow: 0 0 22px rgba(0,229,255,.55), inset 0 0 22px rgba(0,229,255,.35); }
-.reactor i:nth-child(2) { inset: 18px; border: 10px dotted rgba(0,229,255,.75); }
-.reactor i:nth-child(3) { inset: 48px; box-shadow: 0 0 30px 6px rgba(0,229,255,.6);
-  background: radial-gradient(circle, #FFFFFF 0, #BFF6FF 35%, #00E5FF 75%, rgba(0,229,255,0) 100%); }
+.reactor i:nth-child(1) { inset: 0; border: 3px solid #00E5FF; animation: reactor-glow var(--pulse) ease-in-out infinite; }
+.reactor i:nth-child(2) { inset: 16px; border: 10px dotted rgba(0,229,255,.75); }
+.reactor i:nth-child(3) { inset: 36px; border: 2px dashed rgba(255,183,3,.85); }
+.reactor i:nth-child(4) { inset: 52px; box-shadow: 0 0 30px 6px rgba(0,229,255,.6);
+  background: radial-gradient(circle, #FFFFFF 0, #BFF6FF 35%, #00E5FF 75%, rgba(0,229,255,0) 100%);
+  animation: reactor-core var(--pulse) ease-in-out infinite; }
+.reactor-box.busy .reactor i:nth-child(1) { border-color: #FFB703; }
+.reactor-status { font-family: 'Orbitron', monospace; font-size: .75rem; color: #00E5FF; }
+.reactor-box.busy .reactor-status { color: #FFB703; }
+@keyframes reactor-glow {
+  0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,.35), inset 0 0 12px rgba(0,229,255,.2); }
+  50% { box-shadow: 0 0 36px rgba(0,229,255,.9), inset 0 0 30px rgba(0,229,255,.6); }
+}
+@keyframes reactor-core { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+@keyframes reactor-breathe { 0%, 100% { transform: scale(.88); } 50% { transform: scale(1.1); } }
+@keyframes reactor-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: no-preference) {
-  .reactor i:nth-child(2) { animation: reactor-spin 16s linear infinite; }
-  @keyframes reactor-spin { to { transform: rotate(360deg); } }
+  .reactor i:nth-child(2) { animation: reactor-spin var(--spin) linear infinite; }
+  .reactor i:nth-child(3) { animation: reactor-spin var(--spin) linear infinite reverse; }
+  .reactor i:nth-child(4) { animation: reactor-core var(--pulse) ease-in-out infinite,
+    reactor-breathe var(--pulse) ease-in-out infinite; }
 }
 
 .steps { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
@@ -50,6 +67,7 @@ _CSS = """
 .step.done { border-color: #00E5FF; color: #00E5FF; }
 .step.done b { background: #00E5FF; color: #060D1A; }
 
+[data-testid="stSidebar"] { background: #0A1628; border-right: 1px solid rgba(0,229,255,.3); }
 [data-testid="stFileUploaderDropzone"] { border: 2px dashed #00E5FF; border-radius: 10px; background: #0F2038; }
 [data-testid="stDataFrame"] { border: 1px solid rgba(0,229,255,.55); border-radius: 10px; overflow: hidden;
   box-shadow: 0 0 26px rgba(0,229,255,.14); }
@@ -75,22 +93,27 @@ def inject_styles() -> None:
     st.markdown(_CSS, unsafe_allow_html=True)
 
 
-def hero() -> None:
-    st.markdown(
-        """
-        <div class="hero">
-          <div>
-            <h1>Which language is hiding in your segments?</h1>
-            <p>Drop in MXLIFF files and get an Excel report that shows the language of every
-            source and target, and flags the ones the detector is unsure about.</p>
-            <div class="tags"><span class="tag">fi</span><span class="tag">en</span>
-            <span class="tag">sv</span><span class="tag">de</span><span class="tag alert">?</span></div>
-          </div>
-          <div class="reactor" aria-hidden="true"><i></i><i></i><i></i></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+_REACTOR_LABELS = {"idle": "Standby", "busy": "Scanning…", "done": "Scan complete"}
+
+
+def hero(state: str = "idle") -> str:
+    """HTML for the header. `state` (idle / busy / done) drives the arc-reactor animation."""
+    label = _REACTOR_LABELS[state]
+    return f"""
+    <div class="hero">
+      <div>
+        <h1>Which language is hiding in your segments?</h1>
+        <p>Drop in MXLIFF files and get an Excel report that shows the language of every
+        source and target, and flags the ones the detector is unsure about.</p>
+        <div class="tags"><span class="tag">fi</span><span class="tag">en</span>
+        <span class="tag">sv</span><span class="tag">de</span><span class="tag alert">?</span></div>
+      </div>
+      <div class="reactor-box {state}" role="img" aria-label="Status: {label}">
+        <div class="reactor" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="reactor-status">{label}</div>
+      </div>
+    </div>
+    """
 
 
 def step_tracker(active: int) -> str:
