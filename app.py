@@ -60,7 +60,7 @@ def run_analysis(files: list[tuple[str, list[Segment]]], signature: tuple) -> No
 
 def main() -> None:
     ui.inject_styles()
-    ui.hero()
+    hero_slot = st.empty()
     tracker = st.empty()
 
     uploads = st.file_uploader(
@@ -80,6 +80,7 @@ def main() -> None:
 
     result = st.session_state.get("result")
     fresh = bool(result) and result["signature"] == signature and bool(files)
+    hero_slot.markdown(ui.hero("done" if fresh else "idle"), unsafe_allow_html=True)
     tracker.markdown(ui.step_tracker(3 if fresh else 2 if files else 1), unsafe_allow_html=True)
 
     if files:
@@ -95,6 +96,7 @@ def main() -> None:
         st.caption(" · ".join(f"{name}: {len(segs):,} segments" for name, segs in files))
 
     if st.button("⚡ Analyse segments", type="primary", disabled=not files):
+        hero_slot.markdown(ui.hero("busy"), unsafe_allow_html=True)
         run_analysis(files, signature)
         st.rerun()
 
